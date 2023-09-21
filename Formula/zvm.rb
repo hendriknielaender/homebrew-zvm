@@ -6,7 +6,7 @@ class Zvm < Formula
   sha256 "0ca19acdfe4837329c7fa7ae18914fa5f49b6c2a1203ae6f4505baa2cc8e93d8"
 
   def install
-    bin.install "zvm"
+    bin.install "zvm-darwin-x64" => "zvm"
   end
 
   test do
