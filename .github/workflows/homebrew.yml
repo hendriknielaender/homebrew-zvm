@@ -57,7 +57,6 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           base: main
-          token: ${{ secrets.GITHUB_TOKEN }}
           branch: bump/zvm-${{ env.VERSION }}
           commit-message: "chore(homebrew): bump zvm formula to v${{ env.VERSION }}"
           title: "chore(homebrew): bump zvm formula to v${{ env.VERSION }}"
