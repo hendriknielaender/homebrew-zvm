@@ -1,5 +1,9 @@
 name: Bump Homebrew Formula
 
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   release:
     types: [published]
