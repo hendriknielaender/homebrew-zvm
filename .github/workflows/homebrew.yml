@@ -42,7 +42,7 @@ jobs:
         working-directory: Formula
         run: |
           # Update the version line
-          sed -i.bak "s/^  version .*/  version \"${VERSION}\"/" zvm.rb
+          sed -i.bak "s/^  version .*/  version \"${VERSION#v}\"/" zvm.rb
 
           # Update each sha256 entry; adjust sed expressions as needed for your formula format.
           sed -i.bak "s|sha256 \".*\"|sha256 \"${SHA_X86_64_MACOS}\"|g" zvm.rb
