@@ -52,7 +52,8 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.PAT }}
+          base: main
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: bump/zvm-${VERSION}
           commit-message: "chore(homebrew): bump zvm formula to v${VERSION}"
           title: "chore(homebrew): bump zvm formula to v${VERSION}"
