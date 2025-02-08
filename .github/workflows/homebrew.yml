@@ -40,7 +40,7 @@ jobs:
           echo "SHA_AARCH64_LINUX=$SHA_AARCH64_LINUX" >> $GITHUB_ENV
 
       - name: Update formula file
-        working-directory: homebrew-zvm/Formula
+        working-directory: Formula
         run: |
           # Update the version line
           sed -i.bak "s/^  version .*/  version \"${VERSION}\"/" zvm.rb
