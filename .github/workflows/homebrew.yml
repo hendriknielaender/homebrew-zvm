@@ -58,9 +58,8 @@ jobs:
         with:
           base: main
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: bump/zvm-${VERSION}
-          commit-message: "chore(homebrew): bump zvm formula to v${VERSION}"
-          title: "chore(homebrew): bump zvm formula to v${VERSION}"
+          branch: bump/zvm-${{ env.VERSION }}
+          commit-message: "chore(homebrew): bump zvm formula to v${{ env.VERSION }}"
+          title: "chore(homebrew): bump zvm formula to v${{ env.VERSION }}"
           body: |
-            This PR bumps the zvm formula to version ${VERSION}.
-
+            This PR bumps the zvm formula to version ${{ env.VERSION }}.
