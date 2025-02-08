@@ -23,10 +23,10 @@ jobs:
 
       - name: Download artifacts and compute SHAs
         run: |
-          wget https://github.com/hendriknielaender/zvm/releases/download/v${VERSION}/x86_64-macos-zvm.tar.gz
-          wget https://github.com/hendriknielaender/zvm/releases/download/v${VERSION}/aarch64-macos-zvm.tar.gz
-          wget https://github.com/hendriknielaender/zvm/releases/download/v${VERSION}/x86_64-linux-zvm.tar.gz
-          wget https://github.com/hendriknielaender/zvm/releases/download/v${VERSION}/aarch64-linux-zvm.tar.gz
+          wget https://github.com/hendriknielaender/zvm/releases/download/${VERSION}/x86_64-macos-zvm.tar.gz
+          wget https://github.com/hendriknielaender/zvm/releases/download/${VERSION}/aarch64-macos-zvm.tar.gz
+          wget https://github.com/hendriknielaender/zvm/releases/download/${VERSION}/x86_64-linux-zvm.tar.gz
+          wget https://github.com/hendriknielaender/zvm/releases/download/${VERSION}/aarch64-linux-zvm.tar.gz
 
           # Compute SHAs for each artifact.
           export SHA_X86_64_MACOS=$(sha256sum x86_64-macos-zvm.tar.gz | cut -d ' ' -f1)
