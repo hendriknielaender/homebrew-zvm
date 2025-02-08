@@ -39,6 +39,12 @@ jobs:
           echo "SHA_X86_64_LINUX=$SHA_X86_64_LINUX" >> $GITHUB_ENV
           echo "SHA_AARCH64_LINUX=$SHA_AARCH64_LINUX" >> $GITHUB_ENV
 
+      - name: Check out the Homebrew tap repository
+        run: |
+          git clone https://github.com/hendriknielaender/homebrew-zvm.git
+        # If push access is required, consider using a token:
+        # run: git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/hendriknielaender/homebrew-zvm.git
+
       - name: Update formula file
         working-directory: Formula
         run: |
