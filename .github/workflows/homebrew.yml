@@ -14,12 +14,7 @@ jobs:
 
     steps:
       - name: Check out the zvm repository
-        uses: actions/checkout@v3
-
-      - name: Set up Git
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "github-actions@github.com"
+        uses: actions/checkout@v4
 
       - name: Download artifacts and compute SHAs
         run: |
@@ -39,12 +34,6 @@ jobs:
           echo "SHA_X86_64_LINUX=$SHA_X86_64_LINUX" >> $GITHUB_ENV
           echo "SHA_AARCH64_LINUX=$SHA_AARCH64_LINUX" >> $GITHUB_ENV
 
-      - name: Check out the Homebrew tap repository
-        run: |
-          git clone https://github.com/hendriknielaender/homebrew-zvm.git
-        # If push access is required, consider using a token:
-        # run: git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/hendriknielaender/homebrew-zvm.git
-
       - name: Update formula file
         working-directory: Formula
         run: |
@@ -59,22 +48,14 @@ jobs:
 
           rm -f zvm.rb.bak
 
-      - name: Commit and push changes to a new branch
-        working-directory: homebrew-zvm
-        run: |
-          # Create a new branch named "bump/zvm-<version>"
-          git checkout -b bump/zvm-${VERSION}
-          git add Formula/zvm.rb
-          git commit -m "Update zvm to version ${VERSION}"
-          git push origin bump/zvm-${VERSION}
-
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Update zvm formula to version ${VERSION}"
-          title: "Bump zvm formula to version ${VERSION}"
+          token: ${{ secrets.PAT }}
+          branch: bump/zvm-${VERSION}
+          commit-message: "chore(homebrew): bump zvm formula to v${VERSION}"
+          title: "chore(homebrew): bump zvm formula to v${VERSION}"
           body: |
             This PR bumps the zvm formula to version ${VERSION}.
-          base: master
 
