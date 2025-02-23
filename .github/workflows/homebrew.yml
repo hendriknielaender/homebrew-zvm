@@ -45,10 +45,10 @@ jobs:
           sed -i.bak "s/^  version .*/  version \"${VERSION#v}\"/" zvm.rb
 
           # Update each sha256 entry; adjust sed expressions as needed for your formula format.
-          sed -i.bak '/x86_64-macos/ s|sha256 ".*"|sha256 "'"${SHA_X86_64_MACOS}"'"|' zvm.rb
-          sed -i.bak '/aarch64-macos/ s|sha256 ".*"|sha256 "'"${SHA_AARCH64_MACOS}"'"|' zvm.rb
-          sed -i.bak '/x86_64-linux/ s|sha256 ".*"|sha256 "'"${SHA_X86_64_LINUX}"'"|' zvm.rb
-          sed -i.bak '/aarch64-linux/ s|sha256 ".*"|sha256 "'"${SHA_AARCH64_LINUX}"'"|' zvm.rb
+          sed -i.bak '/x86_64-macos-zvm.tar.gz/{n;s|sha256 ".*"|sha256 "'"${SHA_X86_64_MACOS}"'"|;}' zvm.rb
+          sed -i.bak '/aarch64-macos-zvm.tar.gz/{n;s|sha256 ".*"|sha256 "'"${SHA_AARCH64_MACOS}"'"|;}' zvm.rb
+          sed -i.bak '/x86_64-linux-zvm.tar.gz/{n;s|sha256 ".*"|sha256 "'"${SHA_X86_64_LINUX}"'"|;}' zvm.rb
+          sed -i.bak '/aarch64-linux-zvm.tar.gz/{n;s|sha256 ".*"|sha256 "'"${SHA_AARCH64_LINUX}"'"|;}' zvm.rb
           
           rm -f zvm.rb.bak
 
