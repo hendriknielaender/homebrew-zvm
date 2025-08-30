@@ -1,4 +1,4 @@
-name: Bump Homebrew Formula
+name: Update Homebrew Formula
 
 permissions:
   contents: write
@@ -7,58 +7,151 @@ permissions:
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to update to (e.g., v0.14.0)'
+        required: true
+        type: string
 
 jobs:
-  bump-formula:
-    name: Bump Homebrew Formula
+  update-formula:
     runs-on: ubuntu-latest
-
-    env:
-      VERSION: "${{ github.ref_name }}"
-
     steps:
-      - name: Check out the zvm repository
+      - name: Checkout tap repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download artifacts and compute SHAs
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Get version
+        id: version
         run: |
-          wget https://github.com/hendriknielaender/zvm/releases/download/${VERSION}/x86_64-macos-zvm.tar.gz
-          wget https://github.com/hendriknielaender/zvm/releases/download/${VERSION}/aarch64-macos-zvm.tar.gz
-          wget https://github.com/hendriknielaender/zvm/releases/download/${VERSION}/x86_64-linux-zvm.tar.gz
-          wget https://github.com/hendriknielaender/zvm/releases/download/${VERSION}/aarch64-linux-zvm.tar.gz
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION="${{ inputs.version }}"
+          fi
+          # Remove 'v' prefix if present
+          VERSION_CLEAN="${VERSION#v}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "version_clean=${VERSION_CLEAN}" >> $GITHUB_OUTPUT
 
-          # Compute SHAs for each artifact.
-          export SHA_X86_64_MACOS=$(sha256sum x86_64-macos-zvm.tar.gz | cut -d ' ' -f1)
-          export SHA_AARCH64_MACOS=$(sha256sum aarch64-macos-zvm.tar.gz | cut -d ' ' -f1)
-          export SHA_X86_64_LINUX=$(sha256sum x86_64-linux-zvm.tar.gz | cut -d ' ' -f1)
-          export SHA_AARCH64_LINUX=$(sha256sum aarch64-linux-zvm.tar.gz | cut -d ' ' -f1)
-
-          echo "SHA_X86_64_MACOS=$SHA_X86_64_MACOS" >> $GITHUB_ENV
-          echo "SHA_AARCH64_MACOS=$SHA_AARCH64_MACOS" >> $GITHUB_ENV
-          echo "SHA_X86_64_LINUX=$SHA_X86_64_LINUX" >> $GITHUB_ENV
-          echo "SHA_AARCH64_LINUX=$SHA_AARCH64_LINUX" >> $GITHUB_ENV
-
-      - name: Update formula file
-        working-directory: Formula
+      - name: Download and verify release assets
         run: |
-          # Update the version line
-          sed -i.bak "s/^  version .*/  version \"${VERSION#v}\"/" zvm.rb
-
-          # Update each sha256 entry; adjust sed expressions as needed for your formula format.
-          sed -i.bak '/x86_64-macos-zvm.tar.gz/{n;s|sha256 ".*"|sha256 "'"${SHA_X86_64_MACOS}"'"|;}' zvm.rb
-          sed -i.bak '/aarch64-macos-zvm.tar.gz/{n;s|sha256 ".*"|sha256 "'"${SHA_AARCH64_MACOS}"'"|;}' zvm.rb
-          sed -i.bak '/x86_64-linux-zvm.tar.gz/{n;s|sha256 ".*"|sha256 "'"${SHA_X86_64_LINUX}"'"|;}' zvm.rb
-          sed -i.bak '/aarch64-linux-zvm.tar.gz/{n;s|sha256 ".*"|sha256 "'"${SHA_AARCH64_LINUX}"'"|;}' zvm.rb
+          VERSION="${{ steps.version.outputs.version }}"
           
-          rm -f zvm.rb.bak
+          # Download all platform binaries
+          mkdir -p assets
+          cd assets
+          
+          wget -O x86_64-macos.tar.gz "https://github.com/hendriknielaender/zvm/releases/download/${VERSION}/x86_64-macos-zvm.tar.gz"
+          wget -O aarch64-macos.tar.gz "https://github.com/hendriknielaender/zvm/releases/download/${VERSION}/aarch64-macos-zvm.tar.gz"
+          wget -O x86_64-linux.tar.gz "https://github.com/hendriknielaender/zvm/releases/download/${VERSION}/x86_64-linux-zvm.tar.gz"
+          wget -O aarch64-linux.tar.gz "https://github.com/hendriknielaender/zvm/releases/download/${VERSION}/aarch64-linux-zvm.tar.gz"
+          
+          # Compute and store SHA256 checksums
+          echo "SHA_X86_64_MACOS=$(sha256sum x86_64-macos.tar.gz | cut -d' ' -f1)" >> $GITHUB_ENV
+          echo "SHA_AARCH64_MACOS=$(sha256sum aarch64-macos.tar.gz | cut -d' ' -f1)" >> $GITHUB_ENV
+          echo "SHA_X86_64_LINUX=$(sha256sum x86_64-linux.tar.gz | cut -d' ' -f1)" >> $GITHUB_ENV
+          echo "SHA_AARCH64_LINUX=$(sha256sum aarch64-linux.tar.gz | cut -d' ' -f1)" >> $GITHUB_ENV
+
+      - name: Update formula
+        run: |
+          VERSION_CLEAN="${{ steps.version.outputs.version_clean }}"
+          
+          # Update version
+          sed -i "s/version \".*\"/version \"${VERSION_CLEAN}\"/" Formula/zvm.rb
+          
+          # Update SHA256 hashes using more robust sed patterns
+          sed -i '/x86_64-macos-zvm.tar.gz/{n;s/sha256 ".*"/sha256 "'"${SHA_X86_64_MACOS}"'"/;}' Formula/zvm.rb
+          sed -i '/aarch64-macos-zvm.tar.gz/{n;s/sha256 ".*"/sha256 "'"${SHA_AARCH64_MACOS}"'"/;}' Formula/zvm.rb
+          sed -i '/x86_64-linux-zvm.tar.gz/{n;s/sha256 ".*"/sha256 "'"${SHA_X86_64_LINUX}"'"/;}' Formula/zvm.rb
+          sed -i '/aarch64-linux-zvm.tar.gz/{n;s/sha256 ".*"/sha256 "'"${SHA_AARCH64_LINUX}"'"/;}' Formula/zvm.rb
+
+      - name: Test formula syntax and style
+        run: |
+          # Style check (works with file path)
+          brew style Formula/zvm.rb
+          
+          # Basic syntax check
+          ruby -c Formula/zvm.rb
+          echo "✅ Formula syntax and style are valid"
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Create Pull Request
-        id: cpr
-        uses: peter-evans/create-pull-request@v7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          VERSION_CLEAN: ${{ steps.version.outputs.version_clean }}
+        run: |
+          # Create a new branch
+          BRANCH_NAME="bump/zvm-${VERSION_CLEAN}"
+          git checkout -b "${BRANCH_NAME}"
+          
+          # Add and commit changes
+          git add Formula/zvm.rb
+          git commit -m "feat: bump zvm to ${VERSION}"
+          
+          # Push the branch
+          git push origin "${BRANCH_NAME}"
+          
+          # Create PR using GitHub CLI
+          gh pr create \
+            --title "feat: bump zvm to ${VERSION}" \
+            --body "## 🚀 Version Bump: zvm ${VERSION}
+
+          This PR automatically updates the zvm formula to version ${VERSION}.
+
+          ### Changes
+          - Updated version to \`${VERSION_CLEAN}\`
+          - Updated SHA256 checksums for all platform binaries
+          - Verified formula passes syntax and style checks
+
+          ### Verification
+          - [x] Formula syntax is valid
+          - [x] All platform binaries are available  
+          - [x] SHA256 checksums match release assets
+
+          **Auto-generated by GitHub Actions**" \
+            --base main \
+            --head "${BRANCH_NAME}"
+
+  # Test the formula on different platforms
+  test-formula:
+    needs: update-formula
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, macos-13]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          base: main
-          branch: bump/zvm-${{ env.VERSION }}
-          commit-message: "chore(homebrew): bump zvm formula to v${{ env.VERSION }}"
-          title: "chore(homebrew): bump zvm formula to v${{ env.VERSION }}"
-          body: |
-            This PR bumps the zvm formula to version ${{ env.VERSION }}.
+          ref: bump/zvm-${{ needs.update-formula.outputs.version_clean }}
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Test formula installation
+        run: |
+          # Add current repository as a tap
+          TAP_PATH="$(brew --repository)/Library/Taps/hendriknielaender"
+          mkdir -p "${TAP_PATH}"
+          ln -sf "${GITHUB_WORKSPACE}" "${TAP_PATH}/homebrew-zvm"
+          
+          # Test installation from tap
+          brew install --build-from-source hendriknielaender/zvm/zvm
+          
+          # Verify installation
+          zvm --version
+          zvm list
+          
+          # Clean up
+          brew uninstall zvm
