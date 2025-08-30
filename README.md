@@ -34,7 +34,8 @@ zvm use 0.13.0
 ## Supported Versions
 
 - **zvm** - Latest stable release (automatically updated)
-- **zvm@0.13** - Legacy support for 0.13.x series (manual maintenance)
+
+*Note: Versioned formulas (like `zvm@0.14`) can be created when needed for legacy support using the "Create Versioned Formula" GitHub Action.*
 
 ### Version Management Strategy
 

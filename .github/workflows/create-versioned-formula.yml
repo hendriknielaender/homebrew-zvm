@@ -79,40 +79,58 @@ jobs:
           brew style "${{ steps.vars.outputs.formula_file }}"
           echo "✅ Formula style is valid"
 
-      - name: Create pull request
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "feat: add versioned formula zvm@${{ steps.vars.outputs.major_version }}"
-          title: "feat: add versioned formula zvm@${{ steps.vars.outputs.major_version }}"
-          body: |
-            ## 📦 New Versioned Formula: zvm@${{ steps.vars.outputs.major_version }}
-            
-            This PR adds a versioned formula to maintain access to the ${{ steps.vars.outputs.major_version }}.x series.
-            
-            ### Reason
-            ${{ inputs.reason }}
-            
-            ### Details
-            - **Formula**: `zvm@${{ steps.vars.outputs.major_version }}`
-            - **Current version**: ${{ steps.current.outputs.current_version }}
-            - **Installation**: `brew install hendriknielaender/zvm/zvm@${{ steps.vars.outputs.major_version }}`
-            
-            ### Usage
-            ```bash
-            # Install the versioned formula
-            brew install hendriknielaender/zvm/zvm@${{ steps.vars.outputs.major_version }}
-            
-            # Use the versioned binary
-            $(brew --prefix zvm@${{ steps.vars.outputs.major_version }})/bin/zvm --version
-            ```
-            
-            ### Maintenance
-            - [ ] This version will receive security updates
-            - [ ] Documentation updated to reflect version support
-            - [ ] Consider deprecation timeline
-            
-            **Created via GitHub Actions**
-          branch: feature/versioned-formula-${{ steps.vars.outputs.major_version }}
-          base: main
-          delete-branch: true
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAJOR_VERSION: ${{ steps.vars.outputs.major_version }}
+          CURRENT_VERSION: ${{ steps.current.outputs.current_version }}
+          REASON: ${{ inputs.reason }}
+        run: |
+          # Create a new branch
+          BRANCH_NAME="feature/versioned-formula-${MAJOR_VERSION}"
+          git checkout -b "${BRANCH_NAME}"
+          
+          # Add and commit changes
+          git add "${{ steps.vars.outputs.formula_file }}"
+          git commit -m "feat: add versioned formula zvm@${MAJOR_VERSION}"
+          
+          # Push the branch
+          git push origin "${BRANCH_NAME}"
+          
+          # Create PR using GitHub CLI
+          gh pr create \
+            --title "feat: add versioned formula zvm@${MAJOR_VERSION}" \
+            --body "## 📦 New Versioned Formula: zvm@${MAJOR_VERSION}
+
+          This PR adds a versioned formula to maintain access to the ${MAJOR_VERSION}.x series.
+
+          ### Reason
+          ${REASON}
+
+          ### Details
+          - **Formula**: \`zvm@${MAJOR_VERSION}\`
+          - **Current version**: ${CURRENT_VERSION}
+          - **Installation**: \`brew install hendriknielaender/zvm/zvm@${MAJOR_VERSION}\`
+
+          ### Usage
+          \`\`\`bash
+          # Install the versioned formula
+          brew install hendriknielaender/zvm/zvm@${MAJOR_VERSION}
+
+          # Use the versioned binary
+          \$(brew --prefix zvm@${MAJOR_VERSION})/bin/zvm --version
+          \`\`\`
+
+          ### Maintenance
+          - [ ] This version will receive security updates
+          - [ ] Documentation updated to reflect version support
+          - [ ] Consider deprecation timeline
+
+          **Created via GitHub Actions**" \
+            --base main \
+            --head "${BRANCH_NAME}"

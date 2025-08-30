@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, macos-13]
-        formula: [zvm, zvm@0.13]
+        formula: [zvm]
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -24,15 +24,25 @@ jobs:
 
       - name: Run Homebrew tests
         run: |
+          FORMULA_FILE="Formula/${{ matrix.formula }}.rb"
+          
+          # Verify formula file exists
+          if [ ! -f "${FORMULA_FILE}" ]; then
+            echo "❌ Formula file ${FORMULA_FILE} does not exist!"
+            exit 1
+          fi
+          
+          echo "✅ Testing formula: ${FORMULA_FILE}"
+          
           # Check formula syntax and style (file paths work for style)
-          brew style Formula/${{ matrix.formula }}.rb
+          brew style "${FORMULA_FILE}"
           
           # Basic syntax check
-          ruby -c Formula/${{ matrix.formula }}.rb
+          ruby -c "${FORMULA_FILE}"
           echo "✅ Formula syntax is valid"
           
           # Verify the formula can be installed and works
-          brew install --build-from-source Formula/${{ matrix.formula }}.rb
+          brew install --build-from-source "${FORMULA_FILE}"
           
           # Test basic functionality
           if [ "${{ matrix.formula }}" = "zvm" ]; then
