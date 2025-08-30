@@ -71,14 +71,14 @@ jobs:
           sed -i '/x86_64-linux-zvm.tar.gz/{n;s/sha256 ".*"/sha256 "'"${SHA_X86_64_LINUX}"'"/;}' Formula/zvm.rb
           sed -i '/aarch64-linux-zvm.tar.gz/{n;s/sha256 ".*"/sha256 "'"${SHA_AARCH64_LINUX}"'"/;}' Formula/zvm.rb
 
-      - name: Test formula
+      - name: Test formula syntax and style
         run: |
           # Style check (works with file path)
           brew style Formula/zvm.rb
           
           # Basic syntax check
           ruby -c Formula/zvm.rb
-          echo "✅ Formula syntax is valid"
+          echo "✅ Formula syntax and style are valid"
 
       - name: Configure Git
         run: |
@@ -141,12 +141,17 @@ jobs:
 
       - name: Test formula installation
         run: |
-          # Test installation directly from file
-          brew install --build-from-source Formula/zvm.rb
+          # Add current repository as a tap
+          TAP_PATH="$(brew --repository)/Library/Taps/hendriknielaender"
+          mkdir -p "${TAP_PATH}"
+          ln -sf "${GITHUB_WORKSPACE}" "${TAP_PATH}/homebrew-zvm"
+          
+          # Test installation from tap
+          brew install --build-from-source hendriknielaender/zvm/zvm
           
           # Verify installation
           zvm --version
-          zvm list-remote
+          zvm list
           
           # Clean up
           brew uninstall zvm

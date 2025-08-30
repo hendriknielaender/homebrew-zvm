@@ -41,19 +41,28 @@ jobs:
           ruby -c "${FORMULA_FILE}"
           echo "✅ Formula syntax is valid"
           
-          # Verify the formula can be installed and works
-          brew install --build-from-source "${FORMULA_FILE}"
+          # Test formula installation using tap approach
+          echo "Setting up tap for installation testing..."
+          TAP_PATH="$(brew --repository)/Library/Taps/hendriknielaender"
+          mkdir -p "${TAP_PATH}"
+          ln -sf "${GITHUB_WORKSPACE}" "${TAP_PATH}/homebrew-zvm"
+          
+          # Install formula from tap
+          echo "Installing formula: hendriknielaender/zvm/${{ matrix.formula }}"
+          brew install --verbose hendriknielaender/zvm/${{ matrix.formula }}
           
           # Test basic functionality
+          echo "Testing installed formula..."
           if [ "${{ matrix.formula }}" = "zvm" ]; then
             zvm --version
-            zvm list
+            zvm help
           else
             # For versioned formula, test with full path
             "$(brew --prefix ${{ matrix.formula }})/bin/zvm" --version
           fi
           
           # Clean up
+          echo "Cleaning up..."
           brew uninstall ${{ matrix.formula }}
 
   lint:
