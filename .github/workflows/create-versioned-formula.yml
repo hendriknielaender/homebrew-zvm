@@ -74,6 +74,10 @@ jobs:
           # Basic syntax check
           ruby -c "${{ steps.vars.outputs.formula_file }}"
           echo "✅ Formula syntax is valid"
+          
+          # Style check
+          brew style "${{ steps.vars.outputs.formula_file }}"
+          echo "✅ Formula style is valid"
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
