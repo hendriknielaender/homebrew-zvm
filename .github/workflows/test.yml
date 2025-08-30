@@ -1,0 +1,61 @@
+name: Test Homebrew Formula
+
+on:
+  pull_request:
+    paths: ['Formula/**']
+  push:
+    paths: ['Formula/**']
+    branches: [main]
+
+jobs:
+  test-formula:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, macos-13]
+        formula: [zvm, zvm@0.13]
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Run Homebrew tests
+        run: |
+          # Check formula syntax and style
+          brew audit --strict Formula/${{ matrix.formula }}.rb
+          brew style Formula/${{ matrix.formula }}.rb
+          
+          # Test the formula without installation
+          brew test Formula/${{ matrix.formula }}.rb
+          
+          # Verify the formula can be installed and works
+          brew install --build-from-source Formula/${{ matrix.formula }}.rb
+          
+          # Test basic functionality
+          if [ "${{ matrix.formula }}" = "zvm" ]; then
+            zvm --version
+            zvm list
+          else
+            # For versioned formula, test with full path
+            "$(brew --prefix ${{ matrix.formula }})/bin/zvm" --version
+          fi
+          
+          # Clean up
+          brew uninstall ${{ matrix.formula }}
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+        
+      - name: Lint all formulas
+        run: |
+          brew style Formula/
+          brew audit --strict Formula/

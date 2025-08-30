@@ -1,0 +1,114 @@
+name: Create Versioned Formula
+
+on:
+  workflow_dispatch:
+    inputs:
+      major_version:
+        description: 'Major version to archive (e.g., 0.14 for 0.14.x)'
+        required: true
+        type: string
+      reason:
+        description: 'Reason for creating versioned formula'
+        required: true
+        type: choice
+        options:
+          - 'Breaking changes in new version'
+          - 'Maintain compatibility for legacy users'
+          - 'Different use cases'
+          - 'Security maintenance'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-versioned-formula:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up variables
+        id: vars
+        run: |
+          MAJOR_VERSION="${{ inputs.major_version }}"
+          # Convert 0.14 to 014 for class name
+          CLASS_VERSION=$(echo $MAJOR_VERSION | sed 's/\.//g')
+          echo "major_version=${MAJOR_VERSION}" >> $GITHUB_OUTPUT
+          echo "class_version=${CLASS_VERSION}" >> $GITHUB_OUTPUT
+          echo "formula_file=Formula/zvm@${MAJOR_VERSION}.rb" >> $GITHUB_OUTPUT
+
+      - name: Check if versioned formula already exists
+        run: |
+          if [ -f "${{ steps.vars.outputs.formula_file }}" ]; then
+            echo "❌ Formula ${{ steps.vars.outputs.formula_file }} already exists!"
+            exit 1
+          fi
+
+      - name: Get current formula version
+        id: current
+        run: |
+          CURRENT_VERSION=$(grep 'version "' Formula/zvm.rb | sed 's/.*version "\(.*\)".*/\1/')
+          echo "current_version=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Create versioned formula
+        run: |
+          MAJOR_VERSION="${{ steps.vars.outputs.major_version }}"
+          CLASS_VERSION="${{ steps.vars.outputs.class_version }}"
+          CURRENT_VERSION="${{ steps.current.outputs.current_version }}"
+          
+          # Copy current formula
+          cp Formula/zvm.rb "${{ steps.vars.outputs.formula_file }}"
+          
+          # Modify the versioned formula
+          sed -i "s/class Zvm/class ZvmAT${CLASS_VERSION}/" "${{ steps.vars.outputs.formula_file }}"
+          sed -i "s/desc \"Zig Version Manager - Fast and simple Zig version management\"/desc \"Zig Version Manager (Legacy version ${MAJOR_VERSION}.x)\"/" "${{ steps.vars.outputs.formula_file }}"
+          
+          # Add keg_only after license line
+          sed -i '/license "MIT"/a\  \n  # This is a versioned formula for legacy support\n  keg_only :versioned_formula' "${{ steps.vars.outputs.formula_file }}"
+          
+          echo "✅ Created versioned formula: ${{ steps.vars.outputs.formula_file }}"
+
+      - name: Test versioned formula
+        run: |
+          # Basic syntax check
+          ruby -c "${{ steps.vars.outputs.formula_file }}"
+          echo "✅ Formula syntax is valid"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "feat: add versioned formula zvm@${{ steps.vars.outputs.major_version }}"
+          title: "feat: add versioned formula zvm@${{ steps.vars.outputs.major_version }}"
+          body: |
+            ## 📦 New Versioned Formula: zvm@${{ steps.vars.outputs.major_version }}
+            
+            This PR adds a versioned formula to maintain access to the ${{ steps.vars.outputs.major_version }}.x series.
+            
+            ### Reason
+            ${{ inputs.reason }}
+            
+            ### Details
+            - **Formula**: `zvm@${{ steps.vars.outputs.major_version }}`
+            - **Current version**: ${{ steps.current.outputs.current_version }}
+            - **Installation**: `brew install hendriknielaender/zvm/zvm@${{ steps.vars.outputs.major_version }}`
+            
+            ### Usage
+            ```bash
+            # Install the versioned formula
+            brew install hendriknielaender/zvm/zvm@${{ steps.vars.outputs.major_version }}
+            
+            # Use the versioned binary
+            $(brew --prefix zvm@${{ steps.vars.outputs.major_version }})/bin/zvm --version
+            ```
+            
+            ### Maintenance
+            - [ ] This version will receive security updates
+            - [ ] Documentation updated to reflect version support
+            - [ ] Consider deprecation timeline
+            
+            **Created via GitHub Actions**
+          branch: feature/versioned-formula-${{ steps.vars.outputs.major_version }}
+          base: main
+          delete-branch: true
