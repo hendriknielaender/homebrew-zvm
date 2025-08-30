@@ -1,8 +1,8 @@
 class Zvm < Formula
   desc "Zig Version Manager - Fast and simple Zig version management"
   homepage "https://github.com/hendriknielaender/zvm"
-  license "MIT"
   version "0.14.0"
+  license "MIT"
 
   # Automated version detection
   livecheck do
@@ -55,12 +55,12 @@ class Zvm < Formula
   test do
     # Basic version check
     assert_match version.to_s, shell_output("#{bin}/zvm --version")
-    
+
     # Test core functionality
     system "#{bin}/zvm", "list"
-    
+
     # Test remote list functionality
-    output = shell_output("#{bin}/zvm list-remote 2>&1", 0)
+    output = shell_output("#{bin}/zvm list-remote 2>&1")
     assert_match(/zig/i, output)
 
     # Create test directory and verify zvm can operate
@@ -69,10 +69,9 @@ class Zvm < Formula
     cd testdir do
       # Test that zvm can show help without error
       system "#{bin}/zvm", "help"
-      
+
       # Test that binary is properly linked
       assert_predicate bin/"zvm", :executable?
     end
   end
 end
-
