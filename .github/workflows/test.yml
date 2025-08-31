@@ -1,0 +1,87 @@
+name: Test Homebrew Formula
+
+on:
+  pull_request:
+    paths: ['Formula/**']
+  push:
+    paths: ['Formula/**']
+    branches: [main]
+
+jobs:
+  test-formula:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, macos-13]
+        formula: [zvm]
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Run Homebrew tests
+        run: |
+          FORMULA_FILE="Formula/${{ matrix.formula }}.rb"
+          
+          # Verify formula file exists
+          if [ ! -f "${FORMULA_FILE}" ]; then
+            echo "❌ Formula file ${FORMULA_FILE} does not exist!"
+            exit 1
+          fi
+          
+          echo "✅ Testing formula: ${FORMULA_FILE}"
+          
+          # Check formula syntax and style (file paths work for style)
+          brew style "${FORMULA_FILE}"
+          
+          # Basic syntax check
+          ruby -c "${FORMULA_FILE}"
+          echo "✅ Formula syntax is valid"
+          
+          # Test formula installation using tap approach
+          echo "Setting up tap for installation testing..."
+          TAP_PATH="$(brew --repository)/Library/Taps/hendriknielaender"
+          mkdir -p "${TAP_PATH}"
+          ln -sf "${GITHUB_WORKSPACE}" "${TAP_PATH}/homebrew-zvm"
+          
+          # Install formula from tap
+          echo "Installing formula: hendriknielaender/zvm/${{ matrix.formula }}"
+          brew install --verbose hendriknielaender/zvm/${{ matrix.formula }}
+          
+          # Test basic functionality
+          echo "Testing installed formula..."
+          if [ "${{ matrix.formula }}" = "zvm" ]; then
+            zvm --version
+            zvm help
+          else
+            # For versioned formula, test with full path
+            "$(brew --prefix ${{ matrix.formula }})/bin/zvm" --version
+          fi
+          
+          # Clean up
+          echo "Cleaning up..."
+          brew uninstall ${{ matrix.formula }}
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+        
+      - name: Lint all formulas
+        run: |
+          # Style check all formulas
+          brew style Formula/
+          
+          # Basic syntax check for all formulas
+          for formula in Formula/*.rb; do
+            echo "Checking syntax for $formula"
+            ruby -c "$formula"
+          done
+          echo "✅ All formulas have valid syntax"
