@@ -98,9 +98,11 @@ jobs:
           git add Formula/zvm.rb
           git commit -m "feat: bump zvm to ${VERSION}"
           
-          # Create PR using GitHub CLI with --push to handle both push and PR creation
+          # Push branch (use HEAD to avoid specifying branch name)
+          git push -u origin HEAD
+          
+          # Create PR using GitHub CLI
           gh pr create \
-            --push \
             --title "feat: bump zvm to ${VERSION}" \
             --body "## 🚀 Version Bump: zvm ${VERSION}
 
