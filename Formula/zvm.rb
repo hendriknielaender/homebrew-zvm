@@ -14,20 +14,20 @@ class Zvm < Formula
   on_macos do
     if Hardware::CPU.intel?
       url "https://github.com/hendriknielaender/zvm/releases/download/v#{version}/x86_64-macos-zvm.tar.gz"
-      sha256 "ff58cd9ad0fb752f90367faf87ed08da8a972c52c06346ca0cc0b320b8463e3e"
+      sha256 "046ada906b953c4fadf5092d3e999a034170eb223421897058d80e423b0a3439"
     elsif Hardware::CPU.arm?
       url "https://github.com/hendriknielaender/zvm/releases/download/v#{version}/aarch64-macos-zvm.tar.gz"
-      sha256 "1485f1ca7cfef3c8a9472bb01e67369be69f23a00a64919df430ba4a6dbd93c3"
+      sha256 "69320d6c5ab3b8431a97e25775bdeb1006e286befd44bb73cbfceb155831afc6"
     end
   end
 
   on_linux do
     if Hardware::CPU.intel?
       url "https://github.com/hendriknielaender/zvm/releases/download/v#{version}/x86_64-linux-zvm.tar.gz"
-      sha256 "8e90b3bbf31bfb5dcac87fecd8cb6e2f1beb0186f310ea5472f6e9c21290154f"
+      sha256 "074e28ed44f3ebc76be19d4cbbe1f78a7c4847f779f766cc6da53dfb48e5731c"
     elsif Hardware::CPU.arm?
       url "https://github.com/hendriknielaender/zvm/releases/download/v#{version}/aarch64-linux-zvm.tar.gz"
-      sha256 "0f17988bf449851ae8631d21f4f9115781d4abf15f4d995058a1a07fcfe36e87"
+      sha256 "1f9f1cf60617828a7644573af54fe7421cc63533e259da027cb14eccd56de5e6"
     end
   end
 
