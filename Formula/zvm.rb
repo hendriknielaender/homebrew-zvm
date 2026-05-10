@@ -1,7 +1,7 @@
 class Zvm < Formula
   desc "Zig Version Manager - Fast and simple Zig version management"
   homepage "https://github.com/hendriknielaender/zvm"
-  version "0.18.0"
+  version "1.0.0"
   license "MIT"
 
   # Automated version detection
@@ -14,20 +14,20 @@ class Zvm < Formula
   on_macos do
     if Hardware::CPU.intel?
       url "https://github.com/hendriknielaender/zvm/releases/download/v#{version}/x86_64-macos-zvm.tar.gz"
-      sha256 "368fb3564355ccceb9a8c9b9804ad684a7cd3c3ae7c96d4e629aa6735935fd89"
+      sha256 "e9901b8efe3b329aa6e4c392829db0eb0949720ff90c216072188a1ffce2afab"
     elsif Hardware::CPU.arm?
       url "https://github.com/hendriknielaender/zvm/releases/download/v#{version}/aarch64-macos-zvm.tar.gz"
-      sha256 "76ad0e7b4616d9036dfe9bae7f7485c499031c7eaf5bbf4736210070a5fb92f9"
+      sha256 "e10a608735b7ff0ff575edcbd65154d4c5a82e503c65a02a5be74b0a0648c107"
     end
   end
 
   on_linux do
     if Hardware::CPU.intel?
       url "https://github.com/hendriknielaender/zvm/releases/download/v#{version}/x86_64-linux-zvm.tar.gz"
-      sha256 "a42b966ea8cce03d53bb033fcfad3b684828742dd2bc991bdba9d316a52203ed"
+      sha256 "daecd213a600fb1110126718426432a4a24412e7b9a21941fdf0c0c1152dd39a"
     elsif Hardware::CPU.arm?
       url "https://github.com/hendriknielaender/zvm/releases/download/v#{version}/aarch64-linux-zvm.tar.gz"
-      sha256 "705448c7eb3520a732aad3e085c3a8513334041bda0dc8c4c56b9846f6df71fb"
+      sha256 "4170f6b5e67a323801fd54a2374cc74fba40a653418216985ef811551c90f217"
     end
   end
 
